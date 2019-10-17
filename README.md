@@ -12,7 +12,7 @@ This is a plugin for the [Glyphs font editor](http://glyphsapp.com/) by Georg Se
 ### Usage Instructions
 
 1. Open at least one glyph in Edit View.
-2. *Filer > Stitcher:*
+2. *Filter > Stitcher:*
   * Set an *Interval:* intended distance between component origins in units
   * Set a *Component:* the name of a gyph you want to insert as component. It will be placed on the path by its origin point, which is either  x=0/y=0 or where an anchor called `origin` is placed inside the original glyph.
   * *Balance Components:* whether or not the distribution of the nodes should be strtetched out across the paths in such a way that the first and last node of each path will always have a component. Of course, the actual interval distance will not be met exactly anymore.
