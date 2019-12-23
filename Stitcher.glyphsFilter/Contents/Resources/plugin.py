@@ -139,7 +139,14 @@ def dotCoordsOnPath( thisPath, distanceBetweenDots, balanceOverCompletePath=Fals
 	except Exception as e:
 		print traceback.format_exc()
 
-def placeDots( thisLayer, useBackground, componentName, distanceBetweenDots, balanceOverCompletePath=False ):
+def isSelected( thisPath ):
+	if thisPath:
+		for thisNode in thisPath.nodes:
+			if thisNode.selected:
+				return True
+	return False
+
+def placeDots( thisLayer, useBackground, componentName, distanceBetweenDots, balanceOverCompletePath=False, selectionMatters=False, deleteComponents=False ):
 	try:
 		# find out component offset:
 		xOffset = 0.0
@@ -161,12 +168,37 @@ def placeDots( thisLayer, useBackground, componentName, distanceBetweenDots, bal
 				sourceLayer = thisLayer.background
 			else:
 				sourceLayer = thisLayer
-		
+			
+			# selection only matters if source layer actually has a selection:
+			if not sourceLayer.selection:
+				selectionMatters = False
+			
+			# delete existing components first
+			selectedPathHashes = []
+			if deleteComponents:
+				if not selectionMatters:
+					if not deleteAllComponents( thisLayer ):
+						print "-- Error deleting previously placed components."
+				else:
+					for thisPath in sourceLayer.paths:
+						if isSelected(thisPath):
+							selectedPathHashes.append( thisPath.__hash__() )
+					if selectedPathHashes:
+						for i in reversed(range(len(thisLayer.components))):
+							currComp = thisLayer.components[i]
+							pathHash = currComp.userDataForKey_("originPath")
+							if pathHash and pathHash in selectedPathHashes:
+								del thisLayer.components[i]
+			
 			for thisPath in sourceLayer.paths:
-				for thisPoint in dotCoordsOnPath( thisPath, distanceBetweenDots, balanceOverCompletePath ):
-					newComp = GSComponent( componentName, NSPoint( thisPoint.x + xOffset, thisPoint.y + yOffset ) )
-					newComp.alignment = -1
-					thisLayer.addComponent_( newComp )
+				pathHash = thisPath.__hash__()
+				pathIsSelected = pathHash in selectedPathHashes
+				if not selectionMatters or pathIsSelected:
+					for thisPoint in dotCoordsOnPath( thisPath, distanceBetweenDots, balanceOverCompletePath ):
+						newComp = GSComponent( componentName, NSPoint( thisPoint.x + xOffset, thisPoint.y + yOffset ) )
+						newComp.alignment = -1
+						thisLayer.addComponent_( newComp )
+						newComp.setUserData_forKey_(pathHash, "originPath")
 				
 			return True
 		else:
@@ -188,22 +220,17 @@ def minimumOfOne( value ):
 		
 	return returnValue
 
-def process( thisLayer, deleteComponents, componentName, distanceBetweenDots, useBackground=True, balanceOverCompletePath=False ):
+def process( thisLayer, deleteComponents, componentName, distanceBetweenDots, useBackground=True, balanceOverCompletePath=False, selectionMatters=False ):
 	try:
-		if deleteComponents:
-			if not deleteAllComponents( thisLayer ):
-				print "-- Error deleting previously placed components."
-	
 		if useBackground and len( thisLayer.paths ) > 0:
 			if thisLayer.className() == "GSBackgroundLayer":
 				thisLayer = thisLayer.foreground()
 			thisLayer.background.clear()
 			for thisPath in thisLayer.paths:
 				thisLayer.background.paths.append( thisPath.copy() )
-		
 			thisLayer.paths = []
 	
-		if not placeDots( thisLayer, useBackground, componentName, distanceBetweenDots, balanceOverCompletePath ):
+		if not placeDots( thisLayer, useBackground, componentName, distanceBetweenDots, balanceOverCompletePath, selectionMatters, deleteComponents ):
 			print "-- Could not place components at intervals of %.1f units." % distanceBetweenDots
 	except Exception as e:
 		print "Stitcher Error:\n%s"%e
@@ -279,6 +306,7 @@ class Stitcher(FilterWithDialog):
 	def filter(self, layer, inEditView, customParameters):
 		# Defaults:
 		interval, component, balance, useBackground = 100.0, "_circle", False, True
+		selectionMatters = False
 		
 		# Overwrite defaults:
 		if customParameters.has_key('interval'):
@@ -324,11 +352,17 @@ class Stitcher(FilterWithDialog):
 								useBackground = bool( Glyphs.defaults["com.mekkablue.Stitcher.useBackground"] )
 								deleteComponents = True
 								selectedLayers = Font.selectedLayers
-		
+								if len(selectedLayers) == 1 and inEditView:
+									selectionMatters = True
+							
+							# selection can only matter if only one glyph is open for editing:
+							if len(selectedLayers) != 1:
+								selectionMatters = False
+								
 							for thisLayer in selectedLayers:
 								thisGlyph = thisLayer.parent
 								if thisGlyph.name != componentName:
-									process( thisLayer, deleteComponents, componentName, distanceBetweenDots, useBackground, balanceOverCompletePath )
+									process( thisLayer, deleteComponents, componentName, distanceBetweenDots, useBackground, balanceOverCompletePath, selectionMatters )
 						else:
 							print "Stitcher Filter Input Error: need a valid (non-zero) interval, and a valid component name."
 							print "  interval: %f" % interval
