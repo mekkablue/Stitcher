@@ -1,4 +1,5 @@
 # encoding: utf-8
+from __future__ import division, print_function, unicode_literals
 
 ###########################################################################################################
 #
@@ -17,8 +18,9 @@
 import objc
 from GlyphsApp import *
 from GlyphsApp.plugins import *
-import math
+from math import hypot
 
+@objc.python_method
 def deleteAllComponents( thisLayer ):
 	try:
 		# print "-- Deleting %i existing components." % ( len(thisLayer.components) ) #DEBUG
@@ -32,6 +34,7 @@ def deleteAllComponents( thisLayer ):
 		print traceback.format_exc()
 		return False
 
+@objc.python_method
 def bezier( A, B, C, D, t ):
 	x1, y1 = A.x, A.y
 	x2, y2 = B.x, B.y
@@ -43,9 +46,11 @@ def bezier( A, B, C, D, t ):
 
 	return x, y
 
-def distance( node1, node2 ):
-	return math.hypot( node1.x - node2.x, node1.y - node2.y )
+# @objc.python_method
+# def distance( node1, node2 ):
+# 	return hypot( node1.x - node2.x, node1.y - node2.y )
 
+@objc.python_method
 def segmentsForPath( p ):
 	segments=[]
 	currentSegment=[]
@@ -62,6 +67,7 @@ def segmentsForPath( p ):
 	return segments
 	
 
+@objc.python_method
 def getFineGrainPointsForPath( thisPath, distanceBetweenDots ):
 	try:
 		layerCoords = [ ]
@@ -104,12 +110,14 @@ def getFineGrainPointsForPath( thisPath, distanceBetweenDots ):
 		import traceback
 		print traceback.format_exc()
 
+@objc.python_method
 def interpolatePointPos( p1, p2, factor ):
 	factor = factor % 1.0
 	x = p1.x * factor + p2.x * (1.0-factor)
 	y = p1.y * factor + p2.y * (1.0-factor)
 	return NSPoint(x,y)
 
+@objc.python_method
 def dotCoordsOnPath( thisPath, distanceBetweenDots, balanceOverCompletePath=False ):
 	try:
 		dotPoints = [ thisPath.nodes[0] ]
@@ -139,13 +147,17 @@ def dotCoordsOnPath( thisPath, distanceBetweenDots, balanceOverCompletePath=Fals
 	except Exception as e:
 		print traceback.format_exc()
 
+@objc.python_method
 def isSelected( thisPath ):
 	if thisPath:
-		for thisNode in thisPath.nodes:
-			if thisNode.selected:
-				return True
+		thisLayer = thisPath.parent
+		if thisLayer:
+			for thisNode in thisPath.nodes:
+				if thisNode in thisLayer.selection:
+					return True
 	return False
 
+@objc.python_method
 def placeDots( thisLayer, useBackground, componentName, distanceBetweenDots, balanceOverCompletePath=False, selectionMatters=False, deleteComponents=False ):
 	try:
 		# find out component offset:
@@ -210,6 +222,7 @@ def placeDots( thisLayer, useBackground, componentName, distanceBetweenDots, bal
 		print traceback.format_exc()
 		return False
 
+@objc.python_method
 def minimumOfOne( value ):
 	try:
 		returnValue = float( value )
@@ -220,6 +233,7 @@ def minimumOfOne( value ):
 		
 	return returnValue
 
+@objc.python_method
 def process( thisLayer, deleteComponents, componentName, distanceBetweenDots, useBackground=True, balanceOverCompletePath=False, selectionMatters=False ):
 	try:
 		if useBackground and len( thisLayer.paths ) > 0:
@@ -250,6 +264,7 @@ class Stitcher(FilterWithDialog):
 	balanceCheckbox = objc.IBOutlet()
 	useBackgroundCheckbox = objc.IBOutlet()
 	
+	@objc.python_method
 	def settings(self):
 		self.menuName = "Stitcher"
 		
@@ -260,6 +275,7 @@ class Stitcher(FilterWithDialog):
 		self.loadNib('IBdialog', __file__)
 	
 	# On dialog show
+	@objc.python_method
 	def start(self):
 		
 		# Set default value
@@ -303,6 +319,7 @@ class Stitcher(FilterWithDialog):
 		self.update()
 	
 	# Actual filter
+	@objc.python_method
 	def filter(self, layer, inEditView, customParameters):
 		# Defaults:
 		interval, component, balance, useBackground = 100.0, "_circle", False, True
@@ -372,7 +389,7 @@ class Stitcher(FilterWithDialog):
 			import traceback
 			print traceback.format_exc()
 		
-	
+	@objc.python_method
 	def generateCustomParameter( self ):
 		return "%s; component:%s; interval:%s; balance:%s" % ( self.__class__.__name__, 
 			Glyphs.defaults['com.mekkablue.Stitcher.component'],
@@ -380,6 +397,7 @@ class Stitcher(FilterWithDialog):
 			Glyphs.defaults['com.mekkablue.Stitcher.balance'],
 		)
 	
+	@objc.python_method
 	def __file__(self):
 		"""Please leave this method unchanged"""
 		return __file__
