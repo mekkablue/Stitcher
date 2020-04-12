@@ -23,15 +23,16 @@ from math import hypot
 @objc.python_method
 def deleteAllComponents( thisLayer ):
 	try:
-		# print "-- Deleting %i existing components." % ( len(thisLayer.components) ) #DEBUG
+		# print("-- Deleting %i existing components." % ( len(thisLayer.components) )) #DEBUG
 		while len(thisLayer.components) > 0:
-			# print "  Deleting component", thisLayer.components[0].componentName
+			# print("  Deleting component", thisLayer.components[0].componentName)
 			del thisLayer.components[0]
 		
 		return True
 		
 	except Exception as e:
-		print traceback.format_exc()
+		import traceback
+		print(traceback.format_exc())
 		return False
 
 @objc.python_method
@@ -46,9 +47,9 @@ def bezier( A, B, C, D, t ):
 
 	return x, y
 
-# @objc.python_method
-# def distance( node1, node2 ):
-# 	return hypot( node1.x - node2.x, node1.y - node2.y )
+@objc.python_method
+def distance( node1, node2 ):
+	return hypot( node1.x - node2.x, node1.y - node2.y )
 
 @objc.python_method
 def segmentsForPath( p ):
@@ -106,9 +107,9 @@ def getFineGrainPointsForPath( thisPath, distanceBetweenDots ):
 	
 		return layerCoords
 	except Exception as e:
-		print "Stitcher Error:\n%s"%e
+		print("Stitcher Error in getFineGrainPointsForPath():\n%s"%e)
 		import traceback
-		print traceback.format_exc()
+		print(traceback.format_exc())
 
 @objc.python_method
 def interpolatePointPos( p1, p2, factor ):
@@ -145,7 +146,8 @@ def dotCoordsOnPath( thisPath, distanceBetweenDots, balanceOverCompletePath=Fals
 	
 		return dotPoints
 	except Exception as e:
-		print traceback.format_exc()
+		import traceback
+		print(traceback.format_exc())
 
 @objc.python_method
 def isSelected( thisPath ):
@@ -173,7 +175,7 @@ def placeDots( thisLayer, useBackground, componentName, distanceBetweenDots, bal
 				xOffset, yOffset = -sourceAnchor.position.x, -sourceAnchor.position.y
 			except:
 				pass
-				#print "-- Note: no origin anchor in '%s'." % ( componentName )
+				#print("-- Note: no origin anchor in '%s'." % ( componentName ))
 		
 			# use background if specified:
 			if useBackground:
@@ -190,7 +192,7 @@ def placeDots( thisLayer, useBackground, componentName, distanceBetweenDots, bal
 			if deleteComponents:
 				if not selectionMatters:
 					if not deleteAllComponents( thisLayer ):
-						print "-- Error deleting previously placed components."
+						print("-- Error deleting previously placed components.")
 				else:
 					for thisPath in sourceLayer.paths:
 						if isSelected(thisPath):
@@ -209,7 +211,10 @@ def placeDots( thisLayer, useBackground, componentName, distanceBetweenDots, bal
 					for thisPoint in dotCoordsOnPath( thisPath, distanceBetweenDots, balanceOverCompletePath ):
 						newComp = GSComponent( componentName, NSPoint( thisPoint.x + xOffset, thisPoint.y + yOffset ) )
 						newComp.alignment = -1
-						thisLayer.addComponent_( newComp )
+						try:
+							thisLayer.addShape_( newComp )
+						except:
+							thisLayer.addComponent_( newComp )
 						newComp.setUserData_forKey_(pathHash, "originPath")
 				
 			return True
@@ -217,9 +222,9 @@ def placeDots( thisLayer, useBackground, componentName, distanceBetweenDots, bal
 			return False
 		
 	except Exception as e:
-		print "Stitcher Error:\n%s"%e
+		print("Stitcher Error:\n%s"%e)
 		import traceback
-		print traceback.format_exc()
+		print(traceback.format_exc())
 		return False
 
 @objc.python_method
@@ -241,15 +246,25 @@ def process( thisLayer, deleteComponents, componentName, distanceBetweenDots, us
 				thisLayer = thisLayer.foreground()
 			thisLayer.background.clear()
 			for thisPath in thisLayer.paths:
-				thisLayer.background.paths.append( thisPath.copy() )
-			thisLayer.paths = []
+				try:
+					thisLayer.background.shapes.append( thisPath.copy() )
+				except:
+					thisLayer.background.paths.append( thisPath.copy() )
+			
+			try:
+				for i in reversed(range(len(thisLayer.shapes))):
+					shape = thisLayer.shapes[i]
+					if type(shape) is GSPath:
+						del thisLayer.shapes[i]
+			except:
+				thisLayer.paths = None
 	
 		if not placeDots( thisLayer, useBackground, componentName, distanceBetweenDots, balanceOverCompletePath, selectionMatters, deleteComponents ):
-			print "-- Could not place components at intervals of %.1f units." % distanceBetweenDots
+			print("-- Could not place components at intervals of %.1f units." % distanceBetweenDots)
 	except Exception as e:
-		print "Stitcher Error:\n%s"%e
+		print("Stitcher Error:\n%s"%e)
 		import traceback
-		print traceback.format_exc()
+		print(traceback.format_exc())
 
 class Stitcher(FilterWithDialog):
 	
@@ -281,11 +296,12 @@ class Stitcher(FilterWithDialog):
 		# Set default value
 		Glyphs.registerDefault( 'com.mekkablue.Stitcher.interval', 100.0 )
 		Glyphs.registerDefault( 'com.mekkablue.Stitcher.component', "_circle" )
+		Glyphs.registerDefault( 'com.mekkablue.Stitcher.balance', 0)
 		
 		# Set value of text field
 		self.intervalField.setStringValue_( Glyphs.defaults['com.mekkablue.Stitcher.interval'] )
 		self.componentField.setStringValue_( Glyphs.defaults['com.mekkablue.Stitcher.component'].strip() )
-		self.balanceCheckbox.setIntValue_( int(Glyphs.defaults['com.mekkablue.Stitcher.balance']) )
+		self.balanceCheckbox.setIntValue_( bool(Glyphs.defaults['com.mekkablue.Stitcher.balance']) )
 		
 		# Set focus to text field
 		self.intervalField.becomeFirstResponder()
@@ -326,17 +342,17 @@ class Stitcher(FilterWithDialog):
 		selectionMatters = False
 		
 		# Overwrite defaults:
-		if customParameters.has_key('interval'):
+		if 'interval' in customParameters:
 			interval = customParameters['interval']
 		else:
 			interval = float(Glyphs.defaults['com.mekkablue.Stitcher.interval'])
 		
-		if customParameters.has_key('component'):
+		if 'component' in customParameters:
 			component = customParameters['component'].strip()
 		else:
 			component = Glyphs.defaults['com.mekkablue.Stitcher.component'].strip()
 			
-		if customParameters.has_key('balance'):
+		if 'balance' in customParameters:
 			balance = customParameters['balance']
 		else:
 			balance = Glyphs.defaults['com.mekkablue.Stitcher.balance']
@@ -349,12 +365,12 @@ class Stitcher(FilterWithDialog):
 				Font = layer.parent.parent
 			
 			if not Font:
-				print "Stitcher Filter Error: could not determine font."
+				print("Stitcher Filter Error: could not determine font.")
 			else:
 				if component:
 					componentGlyph = Font.glyphs[component]
 					if not componentGlyph:
-						print "Stitcher Filter Error: required component '%s' not in font." % component
+						print("Stitcher Filter Error: required component '%s' not in font." % component)
 					else:
 						if interval and component:
 							# settings:
@@ -381,13 +397,13 @@ class Stitcher(FilterWithDialog):
 								if thisGlyph.name != componentName:
 									process( thisLayer, deleteComponents, componentName, distanceBetweenDots, useBackground, balanceOverCompletePath, selectionMatters )
 						else:
-							print "Stitcher Filter Input Error: need a valid (non-zero) interval, and a valid component name."
-							print "  interval: %f" % interval
-							print "  component name: %s" % component
+							print("Stitcher Filter Input Error: need a valid (non-zero) interval, and a valid component name.")
+							print("  interval: %f" % interval)
+							print("  component name: %s" % component)
 		except Exception as e:
-			print "Stitcher Process Error:\n%s"%e
+			print("Stitcher Process Error:\n%s"%e)
 			import traceback
-			print traceback.format_exc()
+			print(traceback.format_exc())
 		
 	@objc.python_method
 	def generateCustomParameter( self ):
