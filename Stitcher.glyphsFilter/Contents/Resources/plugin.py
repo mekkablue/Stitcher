@@ -24,10 +24,17 @@ from math import hypot
 def deleteAllComponents( thisLayer ):
 	try:
 		# print("-- Deleting %i existing components." % ( len(thisLayer.components) )) #DEBUG
-		while len(thisLayer.components) > 0:
-			# print("  Deleting component", thisLayer.components[0].componentName)
-			del thisLayer.components[0]
 		
+		try:
+			# GLYPHS 3
+			for i in reversed(range(len(thisLayer.shapes))):
+				if type(thisLayer.shapes[i]) == GSComponent:
+					del thisLayer.shapes[i]
+		except:
+			# GLYPHS 2
+			while len(thisLayer.components) > 0:
+				del thisLayer.components[0]
+
 		return True
 		
 	except Exception as e:
@@ -58,7 +65,7 @@ def segmentsForPath( p ):
 	pathlength = len(p.nodes)
 	for i,n in enumerate(p.nodes):
 		currentSegment.append(n.position)
-		if i>0 and n.type != GSOFFCURVE:
+		if i>0 and n.type != OFFCURVE:
 			offset = len(currentSegment)
 			if not offset in (2,4):
 				firstPoint = p.nodes[(i-offset)%pathlength].position
