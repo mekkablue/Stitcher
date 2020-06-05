@@ -13,15 +13,15 @@
 	<key>CFBundleName</key>
 	<string>Stitcher</string>
 	<key>CFBundleVersion</key>
-	<string>4</string>
+	<string>5</string>
 	<key>CFBundleShortVersionString</key>
-	<string>2.0.1</string>
+	<string>2.0.2</string>
 	<key>UpdateFeedURL</key>
 	<string>https://raw.githubusercontent.com/mekkablue/Stitcher/master/Stitcher.glyphsFilter/Contents/Info.plist</string>
 	<key>productPageURL</key>
 	<string>https://github.com/mekkablue/Stitcher</string>
 	<key>productReleaseNotes</key>
-	<string>Glyphs 3 compatibility.</string>
+	<string>Updated plugin binary.</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright, Rainer Erich Scheichelbauer, 2019</string>
 	<key>NSPrincipalClass</key>
