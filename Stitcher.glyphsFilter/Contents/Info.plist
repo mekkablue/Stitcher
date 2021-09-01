@@ -15,7 +15,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>2.0.5</string>
 	<key>CFBundleVersion</key>
-	<string>8</string>
+	<string>9</string>
 	<key>UpdateFeedURL</key>
 	<string>https://raw.githubusercontent.com/mekkablue/Stitcher/master/Stitcher.glyphsFilter/Contents/Info.plist</string>
 	<key>productPageURL</key>
