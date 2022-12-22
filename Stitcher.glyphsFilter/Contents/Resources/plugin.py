@@ -76,7 +76,7 @@ def segmentsForPath( p ):
 	
 
 @objc.python_method
-def getFineGrainPointsForPath( thisPath, distanceBetweenDots ):
+def getFineGrainPointsForPath( thisPath, distanceBetweenDots, precision=10 ):
 	try:
 		layerCoords = [ ]
 		pathSegments = segmentsForPath( thisPath )
@@ -101,8 +101,18 @@ def getFineGrainPointsForPath( thisPath, distanceBetweenDots ):
 				bezierPointB = thisSegment[1]
 				bezierPointC = thisSegment[2]
 				bezierPointD = thisSegment[3]
-			
-				bezierLength = distance( bezierPointA, bezierPointB ) + distance( bezierPointB, bezierPointC ) + distance( bezierPointC, bezierPointD ) # very rough approximation, up to 11% too long
+				
+				# bezierLength = distance( bezierPointA, bezierPointB ) + distance( bezierPointB, bezierPointC ) + distance( bezierPointC, bezierPointD ) # very rough approximation, up to 11% too long
+				
+				previousPoint = bezierPointA
+				bezierLength = 0
+				precision
+				for i in range(precision):
+					t = (i+1.0)/precision
+					currentPoint = bezier(bezierPointA, bezierPointB, bezierPointC, bezierPointD, t)
+					length += distance(previousPoint,currentPoint)
+					previousPoint = currentPoint
+				
 				dotsPerSegment = int( ( bezierLength / distanceBetweenDots ) * 10 )
 			
 				for i in range( 1, dotsPerSegment ):
