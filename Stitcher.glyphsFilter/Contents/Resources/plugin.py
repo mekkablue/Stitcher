@@ -82,14 +82,13 @@ def getFineGrainPointsForPath( thisPath, distanceBetweenDots, precision=10 ):
 		pathSegments = segmentsForPath( thisPath )
 	
 		for thisSegment in pathSegments:
-		
+			segmentLength = thisSegment.length()
+			
 			if len( thisSegment ) == 2:
 				# straight line:
 				beginPoint = thisSegment[0]
 				endPoint   = thisSegment[1]
-			
-				dotsPerSegment = int( ( distance( beginPoint, endPoint ) / distanceBetweenDots ) * 11 )
-			
+				dotsPerSegment = int(segmentLength/distanceBetweenDots*11)
 				for i in range( dotsPerSegment ):
 					x = float( endPoint.x * i ) / dotsPerSegment + float( beginPoint.x * ( dotsPerSegment-i ) ) / dotsPerSegment
 					y = float( endPoint.y * i ) / dotsPerSegment + float( beginPoint.y * ( dotsPerSegment-i ) ) / dotsPerSegment
@@ -102,18 +101,16 @@ def getFineGrainPointsForPath( thisPath, distanceBetweenDots, precision=10 ):
 				bezierPointC = thisSegment[2]
 				bezierPointD = thisSegment[3]
 				
-				# bezierLength = distance( bezierPointA, bezierPointB ) + distance( bezierPointB, bezierPointC ) + distance( bezierPointC, bezierPointD ) # very rough approximation, up to 11% too long
+				# segmentLength = distance( bezierPointA, bezierPointB ) + distance( bezierPointB, bezierPointC ) + distance( bezierPointC, bezierPointD ) # very rough approximation, up to 11% too long
 				
 				previousPoint = bezierPointA
-				bezierLength = 0
-				precision
 				for i in range(precision):
 					t = (i+1.0)/precision
 					currentPoint = bezier(bezierPointA, bezierPointB, bezierPointC, bezierPointD, t)
 					length += distance(previousPoint,currentPoint)
 					previousPoint = currentPoint
 				
-				dotsPerSegment = int( ( bezierLength / distanceBetweenDots ) * 10 )
+				dotsPerSegment = int( ( segmentLength / distanceBetweenDots ) * 10 )
 			
 				for i in range( 1, dotsPerSegment ):
 					t = float( i ) / float( dotsPerSegment )
