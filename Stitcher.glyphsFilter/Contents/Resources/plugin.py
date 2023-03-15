@@ -180,7 +180,7 @@ def placeDots(thisLayer, useBackground, componentName, distanceBetweenDots, bala
 			# selection only matters if source layer actually has a selection:
 			if not sourceLayer.selection:
 				selectionMatters = False
-
+			thisLayer.beginChanges()
 			# delete existing components first
 			selectedPathHashes = []
 			if deleteComponents:
@@ -210,7 +210,7 @@ def placeDots(thisLayer, useBackground, componentName, distanceBetweenDots, bala
 						except:
 							thisLayer.addComponent_(newComp)
 						newComp.setUserData_forKey_(pathHash, "originPath")
-
+			thisLayer.endChanges()
 			return True
 		else:
 			return False
