@@ -61,29 +61,11 @@ def bezier(A, B, C, D, t):
 def distance(node1, node2):
 	return hypot(node1.x - node2.x, node1.y - node2.y)
 
-
-@objc.python_method
-def segmentsForPath(p):
-	segments = []
-	currentSegment = []
-	pathlength = len(p.nodes)
-	for i, n in enumerate(p.nodes):
-		currentSegment.append(n.position)
-		if i > 0 and n.type != OFFCURVE:
-			offset = len(currentSegment)
-			if not offset in (2, 4):
-				firstPoint = p.nodes[(i - offset) % pathlength].position
-				currentSegment.insert(0, firstPoint)
-			segments.append(tuple(currentSegment))
-			currentSegment = []
-	return segments
-
-
 @objc.python_method
 def getFineGrainPointsForPath(thisPath, distanceBetweenDots, precision=10):
 	try:
 		layerCoords = []
-		pathSegments = segmentsForPath(thisPath)
+		pathSegments = thisPath.segments
 
 		for thisSegment in pathSegments:
 			segmentLength = thisSegment.length()
@@ -104,15 +86,6 @@ def getFineGrainPointsForPath(thisPath, distanceBetweenDots, precision=10):
 				bezierPointB = thisSegment[1]
 				bezierPointC = thisSegment[2]
 				bezierPointD = thisSegment[3]
-
-				# segmentLength = distance(bezierPointA, bezierPointB) + distance(bezierPointB, bezierPointC) + distance(bezierPointC, bezierPointD) # very rough approximation, up to 11% too long
-
-				previousPoint = bezierPointA
-				for i in range(precision):
-					t = (i + 1.0) / precision
-					currentPoint = bezier(bezierPointA, bezierPointB, bezierPointC, bezierPointD, t)
-					length += distance(previousPoint, currentPoint)
-					previousPoint = currentPoint
 
 				dotsPerSegment = int((segmentLength / distanceBetweenDots) * 10)
 
