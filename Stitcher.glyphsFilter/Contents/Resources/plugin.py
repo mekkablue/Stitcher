@@ -79,9 +79,11 @@ def segmentsForPath( p ):
 def getFineGrainPointsForPath( thisPath, distanceBetweenDots, precision=10 ):
 	try:
 		layerCoords = [ ]
-		pathSegments = segmentsForPath( thisPath )
-	
+		# pathSegments = segmentsForPath( thisPath )
+		pathSegments = thisPath.segments
+		
 		for thisSegment in pathSegments:
+			# gsPathSegment = GSPathSegment(*thisSegment) # convert to GSPathSegment for convenience methods
 			segmentLength = thisSegment.length()
 			
 			if len( thisSegment ) == 2:
@@ -107,7 +109,7 @@ def getFineGrainPointsForPath( thisPath, distanceBetweenDots, precision=10 ):
 				for i in range(precision):
 					t = (i+1.0)/precision
 					currentPoint = bezier(bezierPointA, bezierPointB, bezierPointC, bezierPointD, t)
-					length += distance(previousPoint,currentPoint)
+					# length += distance(previousPoint,currentPoint)
 					previousPoint = currentPoint
 				
 				dotsPerSegment = int( ( segmentLength / distanceBetweenDots ) * 10 )
@@ -117,7 +119,7 @@ def getFineGrainPointsForPath( thisPath, distanceBetweenDots, precision=10 ):
 					x, y = bezier( bezierPointA, bezierPointB, bezierPointC, bezierPointD, t )
 					layerCoords += [ NSPoint( x, y ) ]
 			
-				layerCoords += [ NSPoint( bezierPointD.x, bezierPointD.y ) ]
+				layerCoords.append(NSPoint(bezierPointD.x, bezierPointD.y))
 	
 		return layerCoords
 	except Exception as e:
@@ -135,7 +137,10 @@ def interpolatePointPos( p1, p2, factor ):
 @objc.python_method
 def dotCoordsOnPath( thisPath, distanceBetweenDots, balanceOverCompletePath=False ):
 	try:
-		dotPoints = [ thisPath.nodes[0] ]
+		firstPoint = thisPath.nodes[0]
+		if firstPoint.type==OFFCURVE:
+			firstPoint = thisPath.nodes[-1] # closed path that starts with a curve
+		dotPoints = [ firstPoint ]
 		fineGrainPoints = getFineGrainPointsForPath( thisPath, distanceBetweenDots )
 	
 		myLastPoint = dotPoints[-1]
@@ -157,7 +162,10 @@ def dotCoordsOnPath( thisPath, distanceBetweenDots, balanceOverCompletePath=Fals
 				j = -1-i
 				newPos = interpolatePointPos( dotPoints[j], reverseDotPoints[i], factor )
 				dotPoints[j] = newPos
-	
+		
+		if distance(dotPoints[0], dotPoints[-1]) < 0.8: #closed path
+			dotPoints.pop(-1)
+			
 		return dotPoints
 	except Exception as e:
 		import traceback
