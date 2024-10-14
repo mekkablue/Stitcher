@@ -29,7 +29,7 @@ def deleteAllComponents(thisLayer):
 		try:
 			# GLYPHS 3
 			for i in reversed(range(len(thisLayer.shapes))):
-				if type(thisLayer.shapes[i]) == GSComponent:
+				if isinstance(thisLayer.shapes[i], GSComponent):
 					del thisLayer.shapes[i]
 		except:
 			# GLYPHS 2
@@ -180,6 +180,7 @@ def placeDots(thisLayer, useBackground, componentName, distanceBetweenDots, bala
 			# selection only matters if source layer actually has a selection:
 			if not sourceLayer.selection:
 				selectionMatters = False
+			
 			thisLayer.beginChanges()
 			# delete existing components first
 			selectedPathHashes = []
@@ -189,7 +190,7 @@ def placeDots(thisLayer, useBackground, componentName, distanceBetweenDots, bala
 						print("-- Error deleting previously placed components.")
 				else:
 					for thisPath in sourceLayer.paths:
-						if isSelected(thisPath):
+						if isSelected(thisPath) or not selectionMatters:
 							selectedPathHashes.append(thisPath.__hash__())
 					if selectedPathHashes:
 						for i in reversed(range(len(thisLayer.components))):
