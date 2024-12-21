@@ -188,7 +188,8 @@ def placeDots( thisLayer, useBackground, componentNameString, distanceBetweenDot
 		xOffsets = []
 		yOffsets = []
 		thisFont = thisLayer.parent.parent
-		componentNames = [name.strip() for name in componentNameString.split(",") if thisFont.glyphs[name]]
+		componentNames = [name.strip(" *") for name in componentNameString.split(",") if thisFont.glyphs[name.strip(" *")]]
+		shouldUseMask = ["*" in name for name in componentNameString.split(",")]
 		sourceComponents = [thisFont.glyphs[name] for name in componentNames]
 		
 		if sourceComponents:
@@ -244,10 +245,9 @@ def placeDots( thisLayer, useBackground, componentNameString, distanceBetweenDot
 							),
 							)
 						newComp.alignment = -1
-						try:
-							thisLayer.addShape_( newComp )
-						except:
-							thisLayer.addComponent_( newComp )
+						if shouldUseMask[j]:
+							newComp.attributes["mask"] = 1
+						thisLayer.addShape_( newComp )
 						newComp.setUserData_forKey_(pathHash, "originPath")
 				
 			return True
@@ -415,7 +415,7 @@ class Stitcher(FilterWithDialog):
 				print("Stitcher Filter Error: could not determine font.")
 			else:
 				if component:
-					componentNames = [name.strip() for name in component.split(",") if Font.glyphs[name.strip()]]
+					componentNames = [name.strip(" *") for name in component.split(",") if Font.glyphs[name.strip(" *")]]
 					componentGlyphs = [Font.glyphs[name] for name in componentNames]
 					if not componentGlyphs:
 						print("Stitcher Filter Error: required components not in font:", component)
