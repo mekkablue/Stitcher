@@ -192,14 +192,14 @@ def placeDots( thisLayer, useBackground, componentNameString, distanceBetweenDot
 		sourceComponents = [thisFont.glyphs[name] for name in componentNames]
 		
 		if sourceComponents:
-			
-			sourceAnchor = sourceComponent.layers[thisLayer.associatedMasterId].anchors["origin"]
-			if sourceAnchor:
-				xOffsets.append(-sourceAnchor.position.x)
-				yOffsets.append(-sourceAnchor.position.y)
-			else:
-				xOffsets.append(0)
-				yOffsets.append(0)
+			for sourceComponent in sourceComponents:
+				sourceAnchor = sourceComponent.layers[thisLayer.associatedMasterId].anchors["origin"]
+				if sourceAnchor:
+					xOffsets.append(-sourceAnchor.position.x)
+					yOffsets.append(-sourceAnchor.position.y)
+				else:
+					xOffsets.append(0)
+					yOffsets.append(0)
 		
 			# use background if specified:
 			if useBackground:
@@ -238,7 +238,7 @@ def placeDots( thisLayer, useBackground, componentNameString, distanceBetweenDot
 							componentNames[j],
 							NSPoint(
 								thisPoint.x + xOffsets[j],
-								thisPoint.y + yOffset[j],
+								thisPoint.y + yOffsets[j],
 							),
 							)
 						newComp.alignment = -1
@@ -443,7 +443,7 @@ class Stitcher(FilterWithDialog):
 									process(
 										thisLayer,
 										deleteComponents,
-										componentName,
+										component,
 										distanceBetweenDots,
 										useBackground,
 										balanceOverCompletePath,
