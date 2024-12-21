@@ -289,9 +289,7 @@ def process( thisLayer, deleteComponents, componentName, distanceBetweenDots, us
 		print(traceback.format_exc())
 
 class Stitcher(FilterWithDialog):
-	
 	# Definitions of IBOutlets
-	
 	# The NSView object from the User Interface. Keep this here!
 	dialog = objc.IBOutlet()
 	
@@ -301,6 +299,22 @@ class Stitcher(FilterWithDialog):
 	balanceCheckbox = objc.IBOutlet()
 	useBackgroundCheckbox = objc.IBOutlet()
 	
+	prefID = "com.mekkablue.Stitcher"
+
+	@objc.python_method
+	def domain(self, prefName):
+		prefName = prefName.strip().strip(".")
+		return self.prefID + "." + prefName.strip()
+	
+	@objc.python_method
+	def pref(self, prefName):
+		prefDomain = self.domain(prefName)
+		return Glyphs.defaults[prefDomain]
+	
+	@objc.python_method
+	def setPref(self, prefName, prefValue):
+		Glyphs.defaults[self.domain(prefName)] = prefValue
+
 	@objc.python_method
 	def settings(self):
 		self.menuName = "Stitcher"
@@ -316,14 +330,14 @@ class Stitcher(FilterWithDialog):
 	def start(self):
 		
 		# Set default value
-		Glyphs.registerDefault( 'com.mekkablue.Stitcher.interval', 100.0 )
-		Glyphs.registerDefault( 'com.mekkablue.Stitcher.component', "_circle" )
-		Glyphs.registerDefault( 'com.mekkablue.Stitcher.balance', 0)
+		Glyphs.registerDefault( self.domain('interval'), 100.0 )
+		Glyphs.registerDefault( self.domain('component'), "_circle" )
+		Glyphs.registerDefault( self.domain('balance'), 0)
 		
 		# Set value of text field
-		self.intervalField.setStringValue_( Glyphs.defaults['com.mekkablue.Stitcher.interval'] )
-		self.componentField.setStringValue_( Glyphs.defaults['com.mekkablue.Stitcher.component'].strip() )
-		self.balanceCheckbox.setIntValue_( bool(Glyphs.defaults['com.mekkablue.Stitcher.balance']) )
+		self.intervalField.setStringValue_( self.pref('interval') )
+		self.componentField.setStringValue_( self.pref('component').strip() )
+		self.balanceCheckbox.setIntValue_( bool(self.pref('balance')) )
 		
 		# Set focus to text field
 		self.intervalField.becomeFirstResponder()
@@ -332,28 +346,28 @@ class Stitcher(FilterWithDialog):
 	@objc.IBAction
 	def setInterval_( self, sender ):
 		# Store value coming in from dialog
-		Glyphs.defaults['com.mekkablue.Stitcher.interval'] = sender.floatValue()
+		self.setPref('interval', sender.floatValue())
 		self.update()
 
 	# Action triggered by UI
 	@objc.IBAction
 	def setComponent_( self, sender ):
 		# Store value coming in from dialog
-		Glyphs.defaults['com.mekkablue.Stitcher.component'] = sender.stringValue().strip()
+		self.setPref('component', sender.stringValue().strip())
 		self.update()
 
 	# Action triggered by UI
 	@objc.IBAction
 	def setBalance_( self, sender ):
 		# Store value coming in from dialog
-		Glyphs.defaults['com.mekkablue.Stitcher.balance'] = sender.intValue()
+		self.setPref('balance', sender.intValue())
 		self.update()
 	
 	# Action triggered by UI
 	@objc.IBAction
 	def setUseBackground_( self, sender ):
 		# Store value coming in from dialog
-		Glyphs.defaults['com.mekkablue.Stitcher.useBackground'] = sender.intValue()
+		self.setPref('useBackground', sender.intValue())
 		self.update()
 	
 	# Actual filter
@@ -367,17 +381,17 @@ class Stitcher(FilterWithDialog):
 		if 'interval' in customParameters:
 			interval = customParameters['interval']
 		else:
-			interval = float(Glyphs.defaults['com.mekkablue.Stitcher.interval'])
+			interval = float(self.pref('interval'))
 		
 		if 'component' in customParameters:
 			component = customParameters['component'].strip()
 		else:
-			component = Glyphs.defaults['com.mekkablue.Stitcher.component'].strip()
+			component = self.pref('component').strip()
 			
 		if 'balance' in customParameters:
 			balance = customParameters['balance']
 		else:
-			balance = Glyphs.defaults['com.mekkablue.Stitcher.balance']
+			balance = self.pref('balance')
 		
 		try:
 			# determine Font:
@@ -398,13 +412,13 @@ class Stitcher(FilterWithDialog):
 							# settings:
 							componentName = component
 							distanceBetweenDots = minimumOfOne( interval )
-							balanceOverCompletePath = bool( Glyphs.defaults["com.mekkablue.Stitcher.balance"] )
+							balanceOverCompletePath = bool( self.pref("balance") )
 							if customParameters:
 								useBackground = False
 								deleteComponents = False
 								selectedLayers = (layer,)
 							else:
-								useBackground = bool( Glyphs.defaults["com.mekkablue.Stitcher.useBackground"] )
+								useBackground = bool( self.pref("useBackground") )
 								deleteComponents = True
 								selectedLayers = Font.selectedLayers
 								if len(selectedLayers) == 1 and inEditView:
@@ -430,9 +444,9 @@ class Stitcher(FilterWithDialog):
 	@objc.python_method
 	def generateCustomParameter( self ):
 		return "%s; component:%s; interval:%s; balance:%s" % ( self.__class__.__name__, 
-			Glyphs.defaults['com.mekkablue.Stitcher.component'],
-			Glyphs.defaults['com.mekkablue.Stitcher.interval'],
-			Glyphs.defaults['com.mekkablue.Stitcher.balance'],
+			self.pref('component'),
+			self.pref('interval'),
+			self.pref('balance'),
 		)
 	
 	@objc.python_method
