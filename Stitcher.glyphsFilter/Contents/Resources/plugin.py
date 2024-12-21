@@ -222,11 +222,13 @@ def placeDots( thisLayer, useBackground, componentNameString, distanceBetweenDot
 						if isSelected(thisPath):
 							selectedPathHashes.append( thisPath.__hash__() )
 					if selectedPathHashes:
-						for i in reversed(range(len(thisLayer.components))):
+						for i in reversed(range(len(thisLayer.shapes))):
+							if not isinstance(thisLayer.shapes[i], GSComponent):
+								continue
 							currComp = thisLayer.components[i]
 							pathHash = currComp.userDataForKey_("originPath")
 							if pathHash and pathHash in selectedPathHashes:
-								del thisLayer.components[i]
+								del thisLayer.shapes[i]
 			
 			for thisPath in sourceLayer.paths:
 				pathHash = thisPath.__hash__()
