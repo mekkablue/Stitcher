@@ -182,22 +182,24 @@ def isSelected( thisPath ):
 	return False
 
 @objc.python_method
-def placeDots( thisLayer, useBackground, componentName, distanceBetweenDots, balanceOverCompletePath=False, selectionMatters=False, deleteComponents=False ):
+def placeDots( thisLayer, useBackground, componentNameString, distanceBetweenDots, balanceOverCompletePath=False, selectionMatters=False, deleteComponents=False ):
 	try:
 		# find out component offset:
-		xOffset = 0.0
-		yOffset = 0.0
-		Font = thisLayer.parent.parent
-		FontMasterID = thisLayer.associatedMasterId
-		sourceComponent = Font.glyphs[ componentName ]
+		xOffsets = []
+		yOffsets = []
+		thisFont = thisLayer.parent.parent
+		componentNames = [name.strip() for name in componentNameString.split(",") if thisFont.glyphs[name]]
+		sourceComponents = [thisFont.glyphs[name] for name in componentNames]
 		
-		if sourceComponent:
-			try:
-				sourceAnchor = sourceComponent.layers[thisLayer.associatedMasterId].anchors["origin"]
-				xOffset, yOffset = -sourceAnchor.position.x, -sourceAnchor.position.y
-			except:
-				pass
-				#print("-- Note: no origin anchor in '%s'." % ( componentName ))
+		if sourceComponents:
+			
+			sourceAnchor = sourceComponent.layers[thisLayer.associatedMasterId].anchors["origin"]
+			if sourceAnchor:
+				xOffsets.append(-sourceAnchor.position.x)
+				yOffsets.append(-sourceAnchor.position.y)
+			else:
+				xOffsets.append(0)
+				yOffsets.append(0)
 		
 			# use background if specified:
 			if useBackground:
@@ -230,8 +232,15 @@ def placeDots( thisLayer, useBackground, componentName, distanceBetweenDots, bal
 				pathHash = thisPath.__hash__()
 				pathIsSelected = pathHash in selectedPathHashes
 				if not selectionMatters or pathIsSelected:
-					for thisPoint in dotCoordsOnPath( thisPath, distanceBetweenDots, balanceOverCompletePath ):
-						newComp = GSComponent( componentName, NSPoint( thisPoint.x + xOffset, thisPoint.y + yOffset ) )
+					for i, thisPoint in enumerate(dotCoordsOnPath( thisPath, distanceBetweenDots, balanceOverCompletePath )):
+						j = i % len(sourceComponents)
+						newComp = GSComponent(
+							componentNames[j],
+							NSPoint(
+								thisPoint.x + xOffsets[j],
+								thisPoint.y + yOffset[j],
+							),
+							)
 						newComp.alignment = -1
 						try:
 							thisLayer.addShape_( newComp )
@@ -431,7 +440,15 @@ class Stitcher(FilterWithDialog):
 							for thisLayer in selectedLayers:
 								thisGlyph = thisLayer.parent
 								if thisGlyph.name != componentName:
-									process( thisLayer, deleteComponents, componentName, distanceBetweenDots, useBackground, balanceOverCompletePath, selectionMatters )
+									process(
+										thisLayer,
+										deleteComponents,
+										componentName,
+										distanceBetweenDots,
+										useBackground,
+										balanceOverCompletePath,
+										selectionMatters,
+										)
 						else:
 							print("Stitcher Filter Input Error: need a valid (non-zero) interval, and a valid component name.")
 							print("  interval: %f" % interval)
