@@ -413,13 +413,13 @@ class Stitcher(FilterWithDialog):
 				print("Stitcher Filter Error: could not determine font.")
 			else:
 				if component:
-					componentGlyph = Font.glyphs[component]
-					if not componentGlyph:
-						print("Stitcher Filter Error: required component '%s' not in font." % component)
+					componentNames = [name.strip() for name in component.split(",") if Font.glyphs[name.strip()]]
+					componentGlyphs = [Font.glyphs[name] for name in componentNames]
+					if not componentGlyphs:
+						print("Stitcher Filter Error: required components not in font:", component)
 					else:
 						if interval and component:
 							# settings:
-							componentName = component
 							distanceBetweenDots = minimumOfOne( interval )
 							balanceOverCompletePath = bool( self.pref("balance") )
 							if customParameters:
@@ -439,7 +439,7 @@ class Stitcher(FilterWithDialog):
 								
 							for thisLayer in selectedLayers:
 								thisGlyph = thisLayer.parent
-								if thisGlyph.name != componentName:
+								if not thisGlyph.name in componentNames:
 									process(
 										thisLayer,
 										deleteComponents,
