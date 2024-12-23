@@ -17,6 +17,10 @@ This is a plugin for the [Glyphs font editor](http://glyphsapp.com/) by Georg Se
   * Set a *Component:* the name of a gyph you want to insert as component. It will be placed on the path by its origin point, which is either  x=0/y=0 or where an anchor called `origin` is placed inside the original glyph. You can use more than one component if you separate names with commas, e.g., `circle1,circle2`. Add an asterisk `*` to a glyph name to use the corresponding components as masks (subtraction shapes), e.g., `shape1,shape2*`.
   * *Balance Components:* whether or not the distribution of the nodes should be strtetched out across the paths in such a way that the first and last node of each path will always have a component. Of course, the actual interval distance will not be met exactly anymore.
   * *Use Background:* Will move the paths in the background and use them from there. Foreground only has components, and will be overwritten. Useful for repeating.
+
+### Rotate components along the path
+
+If the original glyph of the placed component contains an `orientation` anchor, its angle to the origin will be used for orienting the component onto the path.
  
 ### Use as Custom Parameter
 
