@@ -18,7 +18,7 @@ from __future__ import division, print_function, unicode_literals
 import objc
 from GlyphsApp import *
 from GlyphsApp.plugins import *
-from math import hypot, atan2
+from math import hypot, atan2, cos, sin, pi
 from AppKit import NSAffineTransform
 
 @objc.python_method
@@ -84,6 +84,14 @@ def createTransformMatrix(origin, angle):
 	transform.rotateByRadians_(angle)
 	transform.translateXBy_yBy_(-origin.x, -origin.y)
 	return transform.transformStruct()
+
+
+@objc.python_method
+def weightedAverageAngles(angle1Rad, angle2Rad, factor=0.5):
+	x =  (1 + factor) * cos(angle1Rad) + -factor * cos(angle2Rad)
+	y =  (1 + factor) * sin(angle1Rad) + -factor * sin(angle2Rad)
+	avgAngleRad = atan2(y, x) % (2 * pi)
+	return avgAngleRad
 
 
 @objc.python_method
@@ -204,11 +212,9 @@ def dotCoordsOnPath(thisPath, distanceBetweenDots, balanceOverCompletePath=False
 			for i in range(numberOfPoints):
 				factor = 1.0/numberOfPoints*i
 				j = -1-i
-				newPos = interpolatePointPos(dotPoints[j], reverseDotPoints[i], factor)
-				dotPoints[j] = newPos
-
-				newAngle = tangentAngles[j] * (1-factor) + reverseTangentAngles[i] * factor
-				tangentAngles[j] = newAngle
+				dotPoints[j] = interpolatePointPos(dotPoints[j], reverseDotPoints[i], factor)
+				tangentAngles[j] = weightedAverageAngles(tangentAngles[j], reverseTangentAngles[i], factor)
+			print("UPDATE")
 		
 		if distance(dotPoints[0], dotPoints[-1]) < 0.8: #closed path
 			dotPoints.pop(-1)
