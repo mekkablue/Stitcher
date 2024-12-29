@@ -19,7 +19,7 @@ import objc
 from GlyphsApp import *
 from GlyphsApp.plugins import *
 from math import hypot, atan2, cos, sin, pi
-from AppKit import NSAffineTransform
+from AppKit import NSAffineTransform, NSPoint
 
 @objc.python_method
 def deleteAllComponents(thisLayer):
@@ -149,16 +149,6 @@ def getFineGrainPointsForPath(thisPath, distanceBetweenDots, precision=10):
 				bezierPointB = thisSegment[1]
 				bezierPointC = thisSegment[2]
 				bezierPointD = thisSegment[3]
-				
-				# segmentLength = distance(bezierPointA, bezierPointB) + distance(bezierPointB, bezierPointC) + distance(bezierPointC, bezierPointD) # very rough approximation, up to 11% too long
-				
-				previousPoint = bezierPointA
-				for i in range(precision):
-					t = (i+1.0)/precision
-					currentPoint = bezier(bezierPointA, bezierPointB, bezierPointC, bezierPointD, t)
-					# length += distance(previousPoint,currentPoint)
-					previousPoint = currentPoint
-				
 				dotsPerSegment = int((segmentLength / distanceBetweenDots) * 10)
 			
 				for i in range(1, dotsPerSegment):
@@ -498,7 +488,7 @@ class Stitcher(FilterWithDialog):
 						if interval and component:
 							# settings:
 							distanceBetweenDots = minimumOfOne(interval)
-							balanceOverCompletePath = bool(self.pref("balance"))
+							balanceOverCompletePath = bool(balance)
 							if customParameters:
 								useBackground = False
 								deleteComponents = False
