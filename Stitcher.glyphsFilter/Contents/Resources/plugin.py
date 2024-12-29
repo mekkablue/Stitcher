@@ -162,7 +162,7 @@ def getFineGrainPointsForPath(thisPath, distanceBetweenDots, precision=10):
 				
 		return layerCoords, tangentAngles
 	except Exception as e:
-		print("Stitcher Error in getFineGrainPointsForPath():\n%s" % e)
+		print(f"Stitcher Error in getFineGrainPointsForPath():\n{e}")
 		import traceback
 		print(traceback.format_exc())
 
@@ -318,7 +318,7 @@ def placeDots(thisLayer, useBackground, componentNameString, distanceBetweenDots
 			return False
 		
 	except Exception as e:
-		print("Stitcher Error:\n%s" % e)
+		print(f"Stitcher Error:\n{e}")
 		import traceback
 		print(traceback.format_exc())
 		return False
@@ -352,15 +352,15 @@ def process(thisLayer, deleteComponents, componentName, distanceBetweenDots, use
 			try:
 				for i in reversed(range(len(thisLayer.shapes))):
 					shape = thisLayer.shapes[i]
-					if type(shape) is GSPath:
+					if isinstance(shape, GSPath):
 						del thisLayer.shapes[i]
 			except:
 				thisLayer.paths = None
 	
 		if not placeDots(thisLayer, useBackground, componentName, distanceBetweenDots, balanceOverCompletePath, selectionMatters, deleteComponents):
-			print("-- Could not place components at intervals of %.1f units." % distanceBetweenDots)
+			print(f"-- Could not place components at intervals of {distanceBetweenDots:.1f} units.")
 	except Exception as e:
-		print("Stitcher Error:\n%s" % e)
+		print(f"Stitcher Error:\n{e}")
 		import traceback
 		print(traceback.format_exc())
 
@@ -484,7 +484,7 @@ class Stitcher(FilterWithDialog):
 					componentNames = [name.strip(" *") for name in component.split(",") if Font.glyphs[name.strip(" *")]]
 					componentGlyphs = [Font.glyphs[name] for name in componentNames]
 					if not componentGlyphs:
-						print("Stitcher Filter Error: required components not in font:", component)
+						print("Stitcher Filter Error: required components not in font:", ", ".join(componentNames))
 					else:
 						if interval and component:
 							# settings:
@@ -519,16 +519,17 @@ class Stitcher(FilterWithDialog):
 										)
 						else:
 							print("Stitcher Filter Input Error: need a valid (non-zero) interval, and a valid component name.")
-							print("  interval: %f" % interval)
-							print("  component name: %s" % component)
+							print(f"  interval: {interval}")
+							print(f"  component name: {component}")
 		except Exception as e:
-			print("Stitcher Process Error:\n%s"%e)
+			print(f"Stitcher Process Error:\n{e}")
 			import traceback
 			print(traceback.format_exc())
 		
 	@objc.python_method
 	def generateCustomParameter(self):
-		return "%s; component:%s; interval:%s; balance:%s" % (self.__class__.__name__, 
+		return "%s; component:%s; interval:%s; balance:%s" % (
+			self.__class__.__name__, 
 			self.pref('component'),
 			self.pref('interval'),
 			self.pref('balance'),
