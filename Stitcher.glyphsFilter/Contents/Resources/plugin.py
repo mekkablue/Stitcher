@@ -25,7 +25,7 @@ from AppKit import NSAffineTransform, NSPoint
 def deleteAllComponents(thisLayer):
 	try:
 		for i in reversed(range(len(thisLayer.shapes))):
-			if type(thisLayer.shapes[i]) == GSComponent:
+			if isinstance(thisLayer.shapes[i], GSComponent):
 				del thisLayer.shapes[i]
 		return True
 		
@@ -179,7 +179,7 @@ def interpolatePointPos(p1, p2, factor):
 def dotCoordsOnPath(thisPath, distanceBetweenDots, balanceOverCompletePath=False):
 	try:
 		firstPoint = thisPath.nodes[0]
-		if firstPoint.type==OFFCURVE:
+		if firstPoint.type == OFFCURVE:
 			firstPoint = thisPath.nodes[-1] # closed path that starts with a curve
 		dotPoints = [firstPoint]
 		fineGrainPoints, fineGrainTangentAngles = getFineGrainPointsForPath(thisPath, distanceBetweenDots)
@@ -277,7 +277,7 @@ def placeDots(thisLayer, useBackground, componentNameString, distanceBetweenDots
 						print("-- Error deleting previously placed components.")
 				else:
 					for thisPath in sourceLayer.paths:
-						if isSelected(thisPath):
+						if isSelected(thisPath) or not selectionMatters:
 							selectedPathHashes.append(thisPath.__hash__())
 					if selectedPathHashes:
 						for i in reversed(range(len(thisLayer.shapes))):
