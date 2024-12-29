@@ -58,9 +58,9 @@ def segmentsForPath(p):
 	segments=[]
 	currentSegment=[]
 	pathlength = len(p.nodes)
-	for i,n in enumerate(p.nodes):
+	for i, n in enumerate(p.nodes):
 		currentSegment.append(n.position)
-		if i>0 and n.type != OFFCURVE:
+		if i > 0 and n.type != OFFCURVE:
 			offset = len(currentSegment)
 			if not offset in (2,4):
 				firstPoint = p.nodes[(i-offset)%pathlength].position
@@ -136,10 +136,10 @@ def getFineGrainPointsForPath(thisPath, distanceBetweenDots, precision=10):
 				beginPoint = thisSegment[0]
 				endPoint   = thisSegment[1]
 				tangentAngle = getTangentAngle(beginPoint, endPoint)
-				dotsPerSegment = int(segmentLength/distanceBetweenDots*11)
+				dotsPerSegment = int(segmentLength / distanceBetweenDots * 11)
 				for i in range(dotsPerSegment):
-					x = float(endPoint.x * i) / dotsPerSegment + float(beginPoint.x * (dotsPerSegment-i)) / dotsPerSegment
-					y = float(endPoint.y * i) / dotsPerSegment + float(beginPoint.y * (dotsPerSegment-i)) / dotsPerSegment
+					x = float(endPoint.x * i) / dotsPerSegment + float(beginPoint.x * (dotsPerSegment - i)) / dotsPerSegment
+					y = float(endPoint.y * i) / dotsPerSegment + float(beginPoint.y * (dotsPerSegment - i)) / dotsPerSegment
 					layerCoords.append(NSPoint(x, y))
 					tangentAngles.append(tangentAngle)
 				
@@ -162,7 +162,7 @@ def getFineGrainPointsForPath(thisPath, distanceBetweenDots, precision=10):
 				
 		return layerCoords, tangentAngles
 	except Exception as e:
-		print("Stitcher Error in getFineGrainPointsForPath():\n%s"%e)
+		print("Stitcher Error in getFineGrainPointsForPath():\n%s" % e)
 		import traceback
 		print(traceback.format_exc())
 
@@ -170,9 +170,9 @@ def getFineGrainPointsForPath(thisPath, distanceBetweenDots, precision=10):
 @objc.python_method
 def interpolatePointPos(p1, p2, factor):
 	factor = factor % 1.0
-	x = p1.x * factor + p2.x * (1.0-factor)
-	y = p1.y * factor + p2.y * (1.0-factor)
-	return NSPoint(x,y)
+	x = p1.x * factor + p2.x * (1.0 - factor)
+	y = p1.y * factor + p2.y * (1.0 - factor)
+	return NSPoint(x, y)
 
 
 @objc.python_method
@@ -200,11 +200,10 @@ def dotCoordsOnPath(thisPath, distanceBetweenDots, balanceOverCompletePath=False
 			reverseDotPoints, reverseTangentAngles = dotCoordsOnPath(reversePath, distanceBetweenDots)
 			numberOfPoints = min(len(reverseDotPoints), len(dotPoints)-1)
 			for i in range(numberOfPoints):
-				factor = 1.0/numberOfPoints*i
+				factor = 1.0 / numberOfPoints * i
 				j = -1-i
 				dotPoints[j] = interpolatePointPos(dotPoints[j], reverseDotPoints[i], factor)
 				tangentAngles[j] = weightedAverageAngles(tangentAngles[j], reverseTangentAngles[i], factor)
-			print("UPDATE")
 		
 		if distance(dotPoints[0], dotPoints[-1]) < 0.8: #closed path
 			dotPoints.pop(-1)
@@ -270,6 +269,7 @@ def placeDots(thisLayer, useBackground, componentNameString, distanceBetweenDots
 				selectionMatters = False
 			
 			# delete existing components first
+			thisLayer.beginChanges()
 			selectedPathHashes = []
 			if deleteComponents:
 				if not selectionMatters:
@@ -312,12 +312,13 @@ def placeDots(thisLayer, useBackground, componentNameString, distanceBetweenDots
 						
 						thisLayer.addShape_(newComp)
 						newComp.setUserData_forKey_(pathHash, "originPath")
+			thisLayer.endChanges()
 			return True
 		else:
 			return False
 		
 	except Exception as e:
-		print("Stitcher Error:\n%s"%e)
+		print("Stitcher Error:\n%s" % e)
 		import traceback
 		print(traceback.format_exc())
 		return False
@@ -359,7 +360,7 @@ def process(thisLayer, deleteComponents, componentName, distanceBetweenDots, use
 		if not placeDots(thisLayer, useBackground, componentName, distanceBetweenDots, balanceOverCompletePath, selectionMatters, deleteComponents):
 			print("-- Could not place components at intervals of %.1f units." % distanceBetweenDots)
 	except Exception as e:
-		print("Stitcher Error:\n%s"%e)
+		print("Stitcher Error:\n%s" % e)
 		import traceback
 		print(traceback.format_exc())
 
@@ -429,7 +430,7 @@ class Stitcher(FilterWithDialog):
 	@objc.IBAction
 	def setComponent_(self, sender):
 		# Store value coming in from dialog
-		self.setPref('component', sender.stringValue().strip())
+		self.setPref('component', sender.stringValue())
 		self.update()
 
 	# Action triggered by UI
