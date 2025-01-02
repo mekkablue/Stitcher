@@ -481,11 +481,12 @@ class Stitcher(FilterWithDialog):
 				print("Stitcher Filter Error: could not determine font.")
 			else:
 				if component:
-					componentNames = [name.strip(" *") for name in component.split(",") if Font.glyphs[name.strip(" *")]]
-					componentGlyphs = [Font.glyphs[name] for name in componentNames]
-					if not componentGlyphs:
-						print("Stitcher Filter Error: required components not in font:", ", ".join(componentNames))
-					else:
+					componentNames = [name.strip(" *") for name in component.split(",")]
+					componentGlyphs = [Font.glyphs[name] for name in componentNames if Font.glyphs[name]]
+					missingComponents = [name for name in componentNames if Font.glyphs[name] is None]
+					if missingComponents:
+						print(f"⚠️ Stitcher Filter Error: could not find {', '.join(missingComponents)} in font.")
+					if componentGlyphs:
 						if interval and component:
 							# settings:
 							distanceBetweenDots = minimumOfOne(interval)
@@ -517,12 +518,8 @@ class Stitcher(FilterWithDialog):
 										balanceOverCompletePath,
 										selectionMatters,
 										)
-									if not inEditView and thisLayer.components and thisLayer.paths:
-										for i in range(len(thisLayer.shapes)-1, -1, -1):
-											if isinstance(thisLayer.shapes[i], GSPath):
-												del thisLayer.shapes[i]
 						else:
-							print("Stitcher Filter Input Error: need a valid (non-zero) interval, and a valid component name.")
+							print("❌ Stitcher Filter Input Error: need a valid (non-zero) interval, and a valid component name.")
 							print(f"  interval: {interval}")
 							print(f"  component name: {component}")
 		except Exception as e:
