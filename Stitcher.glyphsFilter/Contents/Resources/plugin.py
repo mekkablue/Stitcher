@@ -518,6 +518,10 @@ class Stitcher(FilterWithDialog):
 										balanceOverCompletePath,
 										selectionMatters,
 										)
+									if not inEditView and thisLayer.components and thisLayer.paths:
+										for i in range(len(thisLayer.shapes)-1, -1, -1):
+											if isinstance(thisLayer.shapes[i], GSPath):
+												del thisLayer.shapes[i]
 						else:
 							print("❌ Stitcher Filter Input Error: need a valid (non-zero) interval, and a valid component name.")
 							print(f"  interval: {interval}")
