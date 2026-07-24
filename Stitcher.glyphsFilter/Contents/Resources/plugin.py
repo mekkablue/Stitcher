@@ -16,8 +16,8 @@ from __future__ import division, print_function, unicode_literals
 ###########################################################################################################
 
 import objc
-from GlyphsApp import *
-from GlyphsApp.plugins import *
+from GlyphsApp import Glyphs, GSComponent, GSPath, OFFCURVE
+from GlyphsApp.plugins import FilterWithDialog
 from math import hypot, atan2, cos, sin, pi
 from AppKit import NSAffineTransform, NSPoint
 
